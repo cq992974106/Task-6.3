@@ -1,0 +1,356 @@
+const express = require("express")
+const app = express()
+const bodyParser = require("body-parser")
+const mongoose = require("mongoose")
+const validator = require("validator")
+const https = require("https")
+var crypto = require("crypto");
+var path = require('path')
+
+mongoose.connect("mongodb://localhost:27017/userDB",{useNewUrlParser:true})
+
+app.use(express.static('public'));
+app.use(bodyParser.urlencoded({extend:true}))
+
+
+app.engine('html', require('express-art-template'))
+app.use('/public/', express.static(path.join(__dirname, './public/')))
+app.use('/node_modules/', express.static(path.join(__dirname, './node_modules/')))
+
+//route
+app.get('/', function (req, res){
+  res.render('index.html')
+})
+
+app.post('/', function (req, res){
+})
+
+app.get('/login', function (req, res){
+  res.render('index.html')
+})
+
+app.get('/register', function (req, res){
+  res.render('register.html')
+})
+
+app.get('/reqtask', function (req, res){
+  res.render('reqtask.html')
+})
+
+app.post('/reqtask', function (req, res){
+})
+
+//user
+const userSchema=new mongoose.Schema(
+    {
+    id: String,
+    country: {
+    type: String,
+    required: true
+  },
+    firstName: {
+    type: String,
+    required: true
+  },
+    lastName: {
+    type: String,
+    required: true
+  },
+    email: {
+    type: String,
+    required: true
+  },
+    password: {
+    type: String,
+    required: true
+  },
+    address1: {
+    type: String,
+    required: true
+  },
+  address2: {
+    type: String,
+    required: true
+  },
+    city: {
+    type: String,
+    required: true
+  },
+    state: {
+    type: String,
+    required: true
+  },
+    postalCode: {
+    type: Number,
+  },
+    phoneNumber: {
+    type: Number,
+  }
+    }
+)
+
+const User = new mongoose.model("User", userSchema)
+//insert function
+function insert(id,country,fName,lName,email,psw,adress1,adress2,city,state,zip,pNumber){
+
+var user =  new User({
+  id: id,
+  country: country,
+    firstName: fName,
+    lastName: lName,
+    email: email,
+    password: psw,
+    address1:adress1,
+    address2:adress2,
+    city: city,
+    state: state,
+    postalCode: zip,
+    phoneNumber: pNumber
+  }
+        );
+user.save(function(err,res){
+    if(err){
+        console.log(err);
+    }
+    else{
+        console.log(res);
+    }
+})
+}
+
+app.post('/register', function (req, res) {
+
+  res.setHeader('Content-type','application/json;charset=utf-8');
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Content-Type,Content-Length, Authorization, Accept,X-Requested-With");
+  res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
+  res.header("X-Powered-By",' 3.2.1');
+  
+  var id = req.body.first_name+req.body.email;
+  var country = req.body.country;
+  var fName = req.body.first_name;
+  var lName = req.body.last_name;
+  var email = req.body.email;
+  var psw = req.body.password;
+  var c_psw = req.body.confirm_password;
+  var adress1 = req.body.address1;
+  var adress2 = req.body.address2;
+  var city = req.body.city;
+  var state = req.body.state;
+  var zip = req.body.zip;
+  var pNumber = req.body.phone_number;
+  
+  var updatestr = {email: email};
+  
+  var md5 = crypto.createHash("md5");
+  var newPas = md5.update(psw).digest("hex");
+
+
+
+
+  User.find(updatestr, function(err, obj){
+      if (err) {
+        return res.status(500).json({
+          success: false,
+          message: "err"
+        })
+      }
+      
+      if(psw.length < 8)
+      {
+        return res.status(200).json({
+          err_code: 2,
+          message:"Password can not be less than 8 letters"
+         })
+        
+      }
+      
+     if(psw != c_psw)
+         {
+           return res.status(200).json({
+             err_code: 3,
+             message:"The two password inputs are inconsistent"
+            })
+         }
+
+         if(obj.length != 0)
+      {
+        return res.status(200).json({
+          err_code: 1,
+          message:"email existed"
+         })
+        
+      }
+      else
+      {
+        insert(id,country,fName,lName,email,newPas,adress1,adress2,city,state,zip,pNumber); 
+            //send email
+     const data = {
+       members:[{
+       email_address:email,
+       status:"subscribed",
+       merge_fields:{
+          FNAME: fName,
+         LNAME: lName
+      }
+    }]
+  }
+   jsonData = JSON.stringify(data);
+
+      const url = "https://us17.api.mailchimp.com/3.0/lists/8ce1e9593c";
+      const options = {
+      method:"POST",
+      auth:"azi:6f8c2444e057e16d929df98325e3b4b3-us17"
+  }
+
+      const request = https.request(url, options, (response)=>{
+        response.on("data", (data)=>{
+        console.log(JSON.parse(data))
+    })
+  })
+
+        request.write(jsonData)
+        request.end();
+
+
+        return res.status(200).json({
+          err_code:0,
+         message: 'registered successfully'
+        })
+      }
+
+})  
+});
+
+app.post('/login', function (req, res, next) {
+
+  res.setHeader('Content-type','application/json;charset=utf-8')
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Content-Type,Content-Length, Authorization, Accept,X-Requested-With");
+  res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
+  res.header("X-Powered-By",' 3.2.1')
+
+  var email = req.body.email;
+  var UserPsw = req.body.password;
+
+  var md5 = crypto.createHash("md5");
+  var newPas = md5.update(UserPsw).digest("hex");
+
+
+  User.findOne({
+      email: email,password:newPas},function (err, user){
+    if(err) {
+
+        return res.status(500).json({
+            err_code:500,
+            message: 'err'
+        })
+    }
+
+    if(!user) {
+      return res.status(200).json({
+          err_code: 1,
+          message: 'email or password err'
+      })
+  }
+    return res.status(200).json({
+             err_code: 0,
+             message: 'success'
+         })
+    
+    })
+});
+
+// Crowd REST APIs
+//workers
+app.route('/workers')
+.get( (req, res)=>{
+    User.find((err, userList)=>{
+        if (err) {res.send(err)}
+        else {res.send(userList)}
+    })
+})
+.post( (req,res)=>{
+    const user = new User({
+        id : req.body.first_name+req.body.email,
+        country : req.body.country,
+        firstName : req.body.first_name,
+        lastName : req.body.last_name,
+        email : req.body.email,
+        password : req.body.password,
+        adress1 : req.body.address1,
+        adress2 : req.body.address2,
+        city : req.body.city,
+        state : req.body.state,
+        postalCode : req.body.zip,
+        phoneNumber : req.body.phone_number
+    })
+    user.save((err) =>{
+        if (err) {res.send(err)}
+        else res.send ('Successfully added a new user!')
+    }
+    )
+})
+.delete((req,res) =>{
+    User.deleteMany((err) =>{
+        if (err) {res.send(err)}
+        else {res.send('Successfully deleted all users!')}
+    })
+})
+
+//workers/:id
+app.route('/workers/:id')
+.get((req, res)=>{
+    User.findOne({id: req.params.id}, (err, foundUser)=>{
+        if (foundUser) (res.send(foundUser))
+        else res.send("No Matched User Found!")
+    })
+})
+.put((req,res)=>{
+User.update(
+    {id: req.params.id},
+    {   id: req.body.first_name+req.body.email,
+        country : req.body.country,
+        firstName : req.body.first_name,
+        lastName : req.body.last_name,
+        email : req.body.email,
+        password : req.body.password,
+        adress1 : req.body.address1,
+        adress2 : req.body.address2,
+        city : req.body.city,
+        state : req.body.state,
+        postalCode : req.body.zip,
+        phoneNumber : req.body.phone_number
+   
+    },
+    {overwrite:true}, 
+    (err)=>{
+        if (err) {res.send(err)}
+        else {res.send('Successfully updated!')}
+    }
+)
+})
+.delete((req,res) =>{
+  User.deleteOne({id: req.params.id}, (err) =>{
+      if (err) {res.send(err)}
+      else {res.send('Successfully deleted this user!')}
+  })
+})
+
+.patch((req, res)=>{
+    User.update(
+        {id: req.params.id},
+        {$set: req.body},
+        (err)=>{
+            if (!err) {res.send('Successfully updated! ')}
+            else res.send(err)
+        }
+    )
+})
+
+app.listen(process.env.PORT || 5000, ()=>{
+  console.log('Server started on port 8000');
+})
+
+
+

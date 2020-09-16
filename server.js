@@ -310,10 +310,7 @@ app.post('/register', function (req, res) {
         request.end();
 
 
-        return res.status(200).json({
-          err_code:0,
-         message: 'registered successfully'
-        })
+        res.redirect('/')
       }
 
 })  

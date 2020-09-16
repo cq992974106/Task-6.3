@@ -82,11 +82,11 @@
        console.log("ID Token: " + id_token);
        window.location.href='/googleLog';
      }
-     
+
   $(function(){
     $("#google").click(function(){
   
-     onSignIn(googleUser);
+      location.href='/googleLog';
     })
 
     })

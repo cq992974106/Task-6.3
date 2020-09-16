@@ -13,8 +13,9 @@ const session = require('express-session')
 var LocalStrategy = require('passport-local').Strategy;
 var nodemailer = require("nodemailer");
 SALT_WORK_FACTOR = 5;
+mongoose.connect("mongodb+srv://chenqiang:Cq668471@sit313.pmsom.mongodb.net/userDB?retryWrites=true&w=majority")
 
-mongoose.connect("mongodb://localhost:27017/userDB",{useNewUrlParser:true})
+//mongoose.connect("mongodb://localhost:27017/userDB",{useNewUrlParser:true})
 
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({extended:true}))

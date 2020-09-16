@@ -57,7 +57,7 @@
          </div>                                                      
   </form>
   
-  <div class="g-signin2" data-onsuccess="onSignIn" data-theme="dark" herf="/googleLog"></div>
+  <div class="g-signin2" data-onsuccess="onSignIn" data-theme="dark" name="google" id="google"></div>
 
 
 
@@ -82,8 +82,14 @@
        console.log("ID Token: " + id_token);
        window.location.href='/googleLog';
      }
+     
+  $(function(){
+    $("#google").click(function(){
+  
+     onSignIn(googleUser);
+    })
 
-
+    })
  
  
 </script>

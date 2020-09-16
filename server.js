@@ -12,7 +12,6 @@ const passportLocalMongoose = require('passport-local-mongoose')
 const session = require('express-session')
 var LocalStrategy = require('passport-local').Strategy;
 var nodemailer = require("nodemailer");
-var bcrypt = require('bcrypt');
 SALT_WORK_FACTOR = 5;
 
 mongoose.connect("mongodb://localhost:27017/userDB",{useNewUrlParser:true})

@@ -107,9 +107,9 @@ app.post('/forgetPwd', function (req, res){
     　　from: "992974106@qq.com",
     　　to: email,
     　　subject: "iCrowdTask password reset",
-    　　html:"<h1>Hi,"+email+"</h1><br> <p>click <a href="+'"http://localhost:5000/forgetPwd/resetPwd"'+">here</a> to reset your password</p>"
+    　　html:"<h1>Hi,"+email+"</h1><br> <p>click <a href="+'"https://task6-3.herokuapp.com/forgetPwd/resetPwd"'+">here</a> to reset your password</p>"
     }
-
+    //https://task6-3.herokuapp.com/  http://localhost:5000/
     smtpTransport.sendMail(mailOptions, function(err, resp){
       　　if(err){
       　　　　console.log(err)

@@ -1,7 +1,5 @@
 const mongoose = require('mongoose')
 const passportLocalMongoose = require('passport-local-mongoose')
-var bcrypt = require('bcrypt-nodejs');
-var bcrypt = require('bcrypt');
 SALT_WORK_FACTOR = 5;
 
 const userSchema=new mongoose.Schema(

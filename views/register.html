@@ -187,7 +187,7 @@
                     alert('email existed')
                     }else if(data.err_code === 0){
                     alert('registered successfully')
-                    self.location.href="/"
+                    window.location.href="/"
                     }
                     else if(data.err_code === 2){
                     alert('Password can not be less than 8 letters')    
